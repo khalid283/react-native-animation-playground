@@ -2,10 +2,11 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import LoginSignup from './src/Auth/LoginSignup';
 import Shopping from './src/Shopping/Shopping';
+import ImagePopup from './src/ImagePopup/ImagePopup';
 
 export default function App() {
   return (
-    <Shopping />
+    <ImagePopup />
   );
 }
 
