@@ -9,3 +9,5 @@ npm-debug.*
 *.orig.*
 web-build/
 web-report/
+src/Lightbox
+src/ImagePopup/PopupAnimate_bk.js
