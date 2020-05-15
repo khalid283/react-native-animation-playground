@@ -6,7 +6,7 @@ import { State, createNativeWrapper, PureNativeButton } from 'react-native-gestu
 const { width, height } = Dimensions.get('window');
 const halfHeight = height/2;
 const halfWidth = width/2;
-const { Value, event, createAnimatedComponent, block, sub, cond, eq, set, Clock, startClock, clockRunning, stopClock, debug, timing } = Animated;
+const { Value, event, lessOrEq, createAnimatedComponent, call, spring, floor, round, block, sub, cond, eq, set, Clock, startClock, clockRunning, stopClock, debug, timing } = Animated;
 
 const AnimatedRawButton = createNativeWrapper(
     createAnimatedComponent(PureNativeButton),
@@ -44,6 +44,8 @@ function runTiming(clock, value, dest) {
       state.position
     ]);
 }
+
+
 
 export default (props) => {
     const imageRef = useRef();
@@ -87,9 +89,50 @@ export default (props) => {
     }
     getLayout();
 
+    function runSpring(clock, value, velocity, dest) {
+        const state = {
+            finished: new Value(0),
+            velocity: new Value(0),
+            position: new Value(0),
+            time: new Value(0)
+        };
+        
+        const config = {
+            damping: 400,
+            mass: 1,
+            stiffness: 121.6,
+            overshootClamping: false,
+            restSpeedThreshold: 0.001,
+            restDisplacementThreshold: 0.001,
+            toValue: new Value(0)
+        };
+        
+        return [
+            cond(clockRunning(clock), 0, [
+                set(state.finished, 0),
+                set(state.velocity, velocity),
+                set(state.position, value),
+                set(config.toValue, dest),
+                startClock(clock)
+            ]),
+            spring(clock, state, config),
+            cond(state.finished, debug('stop spring', stopClock(clock))),
+            cond(state.finished, call([state.position], springComplete)),
+            state.position
+        ];
+    }
+
+    function springComplete(position) {
+        console.log(position)
+        if(position[0] == 320){
+            cardStatusImage.setValue(0);
+        }else{
+            cardStatusImage.setValue(1);
+        }
+    }
+
     const clock_backHeight = new Clock();
     const backHeight = cond(eq(tapState, State.END),[
-        debug('imageRef', originX),
         cond(
             eq(cardStatus, 0),[
                 set(transformY, runTiming(clock_backHeight, transformY, height)),
@@ -114,24 +157,31 @@ export default (props) => {
     const clock_imagePaddingTop= new Clock();
     const imagePaddingTop = cond(eq(tapState, State.END),
     [
+        
+        debug('dest', floor(sub(halfHeight, originH))),
+        debug('cardStatusImage', cardStatusImage),
         cond(eq(cardStatusImage, 0),[
-            set(imageX, runTiming(clock_imagePaddingTop, imageX, sub(halfHeight, originH))),
-            cond(eq(imageX, sub(halfHeight, originH)),[set(cardStatusImage, 1)]),
+            set(imageX, runSpring(clock_imagePaddingTop, imageX, 0.02, floor(sub(halfHeight, originH)))),
+            cond(floor(imageX), floor(sub(halfHeight, originH)),[set(cardStatusImage, 1)]),
+            debug('imageX', floor(imageX)),
             imageX
         ],[
             set(imageX, runTiming(clock_imagePaddingTop, imageX, 0)),
             cond(eq(imageX, 0),[set(cardStatusImage, 0)]),
             imageX
         ])
-    ],[
+    ]
+    ,[
+        debug('imageXX', imageX),
         cond(eq(tapState, 0),[
-            set(imageX, runTiming(clock_imagePaddingTop, imageX, sub(halfHeight, originH))),
-            cond(eq(imageX, sub(halfHeight, originH)),[set(cardStatusImage, 1)]),
+            // set(imageX, runSpring(clock_imagePaddingTop, imageX, 10, sub(halfHeight, originH))),
+            cond(lessOrEq(floor(imageX), floor(sub(halfHeight, originH))),[set(cardStatusImage, 1)]),
             imageX
         ],[
             imageX
         ])
-    ]);
+    ]
+    );
 
     const clock_imagePaddingLeft= new Clock();
     const imagePaddingLeft = cond(eq(tapState, State.END),

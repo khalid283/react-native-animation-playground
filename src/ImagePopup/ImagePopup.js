@@ -18,7 +18,7 @@ export default class ImagePopup extends React.Component{
                 </View>
                     <PopupAnimate style={{ width: 96, height: 96 }} source={require('../../assets/icon/sm_google.png')} />
                     
-                    <PopupAnimate style={{ width: 96, height: 96 }} source={require('../../assets/icon/sm_twitter.png')} />
+                    {/* <PopupAnimate style={{ width: 96, height: 96 }} source={require('../../assets/icon/sm_twitter.png')} /> */}
                 <View>
                     <Text>
                         SomeText
